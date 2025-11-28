@@ -1,10 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import LoginPage from "./components/LoginPage"
-import Dashboard from "./components/Dashboard"
+import DashboardLayout from "./components/DashboardLayout"
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import ProtectedRoute from "./components/ProtectedRoute"
+import { Toaster } from "./components/Toaster"
+import { ToastProvider } from "../hooks/use-toast"
+import DashboardRoute from "./routes/DashboardRoute"
+import ServicesRoute from "./routes/ServicesRoute"
+import PortfolioRoute from "./routes/PortfolioRoute"
+import CareRoute from "./routes/CareRoute"
+import BlogRoute from "./routes/BlogRoute"
+import ClientsRoute from "./routes/ClientsRoute"
+import AppointmentsRoute from "./routes/AppointmentsRoute"
 
 // Beauty Salon Types
 export interface Service {
@@ -27,9 +36,13 @@ export interface PortfolioItem {
 
 export interface CareArticle {
   _id: string
+  slug: string
   title: string
   excerpt: string
+  content: string
   image: string
+  sidebarTips: string[]
+  sidebarTimeText: string
   createdAt: string
   updatedAt: string
 }
@@ -39,6 +52,7 @@ export interface BlogPost {
   slug: string
   title: string
   excerpt: string
+  content: string
   date: string
   image: string
   createdAt: string
@@ -57,8 +71,8 @@ export interface Client {
 
 export interface Appointment {
   _id: string
-  client: string
-  service: string
+  client: string | { _id: string; name: string; phone: string; email?: string }
+  service: string | { _id: string; title: string; description: string }
   date: string
   startTime: string
   endTime: string
@@ -70,18 +84,6 @@ export interface Appointment {
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth()
-  const [currentView, setCurrentView] = useState<'login' | 'dashboard'>(
-    isAuthenticated ? 'dashboard' : 'login'
-  )
-
-  // Update view when authentication state changes
-  useEffect(() => {
-    if (isAuthenticated) {
-      setCurrentView('dashboard')
-    } else {
-      setCurrentView('login')
-    }
-  }, [isAuthenticated])
 
   // Show loading screen while checking authentication
   if (loading) {
@@ -99,23 +101,40 @@ function AppContent() {
   }
 
   return (
-    <>
-      {currentView === 'login' ? (
-        <LoginPage onLogin={() => setCurrentView('dashboard')} />
-      ) : (
+    <Routes>
+      <Route path="/login" element={
+        isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />
+      } />
+      
+      <Route path="/" element={
         <ProtectedRoute requiredRole="admin">
-          <Dashboard onLogout={() => setCurrentView('login')} />
+          <DashboardLayout />
         </ProtectedRoute>
-      )}
-    </>
+      }>
+        <Route index element={<DashboardRoute />} />
+        <Route path="services" element={<ServicesRoute />} />
+        <Route path="portfolio" element={<PortfolioRoute />} />
+        <Route path="care" element={<CareRoute />} />
+        <Route path="blog" element={<BlogRoute />} />
+        <Route path="clients" element={<ClientsRoute />} />
+        <Route path="appointments" element={<AppointmentsRoute />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
+    </Routes>
   )
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <AppContent />
+          <Toaster />
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 

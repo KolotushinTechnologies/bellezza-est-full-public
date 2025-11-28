@@ -65,7 +65,7 @@ export const getAppointments = asyncHandler(async (req: Request, res: Response, 
   // Populate with client and service
   query = query.populate([
     { path: 'client', select: 'name phone email' },
-    { path: 'service', select: 'name price duration' }
+    { path: 'service', select: 'title description' }
   ]);
 
   // Executing query
@@ -102,7 +102,7 @@ export const getAppointments = asyncHandler(async (req: Request, res: Response, 
 export const getAppointment = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const appointment = await Appointment.findById(req.params.id).populate([
     { path: 'client', select: 'name phone email' },
-    { path: 'service', select: 'name price duration' }
+    { path: 'service', select: 'title description' }
   ]);
 
   if (!appointment) {
@@ -167,7 +167,13 @@ export const createAppointment = asyncHandler(async (req: Request, res: Response
     return next(new ErrorResponse(`Time slot is already booked`, 400));
   }
 
-  const appointment = await Appointment.create(req.body);
+  let appointment = await Appointment.create(req.body);
+
+  // Populate client and service
+  appointment = await Appointment.findById(appointment._id).populate([
+    { path: 'client', select: 'name phone email' },
+    { path: 'service', select: 'title description' }
+  ]) as any;
 
   res.status(201).json({
     success: true,
@@ -245,7 +251,7 @@ export const updateAppointment = asyncHandler(async (req: Request, res: Response
     runValidators: true
   }).populate([
     { path: 'client', select: 'name phone email' },
-    { path: 'service', select: 'name price duration' }
+    { path: 'service', select: 'title description' }
   ]);
 
   res.status(200).json({
@@ -280,7 +286,7 @@ export const getAppointmentsByClient = asyncHandler(async (req: Request, res: Re
     .sort('date startTime')
     .populate([
       { path: 'client', select: 'name phone email' },
-      { path: 'service', select: 'name price duration' }
+      { path: 'service', select: 'title description' }
     ]);
 
   res.status(200).json({
@@ -309,7 +315,7 @@ export const getAppointmentsByDateRange = asyncHandler(async (req: Request, res:
     .sort('date startTime')
     .populate([
       { path: 'client', select: 'name phone email' },
-      { path: 'service', select: 'name price duration' }
+      { path: 'service', select: 'title description' }
     ]);
 
   res.status(200).json({

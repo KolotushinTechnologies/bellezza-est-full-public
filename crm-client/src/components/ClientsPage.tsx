@@ -1,19 +1,25 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Edit2, Trash2, X, User } from "lucide-react"
+import { Plus, Edit2, Trash2, X, User, AlertTriangle } from "lucide-react"
 import type { Client } from "../App"
 import ModalPortal from "./ModalPortal"
+import { useToast } from "../../hooks/use-toast"
+import ClientsSkeleton from "./ClientsSkeleton"
 
 interface ClientsPageProps {
   clients: Client[]
   onAdd: (client: Omit<Client, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>
   onUpdate: (id: string, client: Partial<Client>) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  isLoading?: boolean
 }
 
-export default function ClientsPage({ clients, onAdd, onUpdate, onDelete }: ClientsPageProps) {
+export default function ClientsPage({ clients, onAdd, onUpdate, onDelete, isLoading = false }: ClientsPageProps) {
+  const { toast } = useToast()
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', notes: '' })
   const [loading, setLoading] = useState(false)
@@ -24,14 +30,28 @@ export default function ClientsPage({ clients, onAdd, onUpdate, onDelete }: Clie
     try {
       if (editingClient) {
         await onUpdate(editingClient._id, formData)
+        toast({
+          title: "Клиент обновлен",
+          description: "Изменения успешно сохранены",
+          variant: "default",
+        })
       } else {
         await onAdd(formData)
+        toast({
+          title: "Клиент добавлен",
+          description: "Новый клиент успешно добавлен",
+          variant: "default",
+        })
       }
       setShowModal(false)
       setFormData({ name: '', phone: '', email: '', notes: '' })
       setEditingClient(null)
     } catch (error) {
-      alert('Ошибка при сохранении')
+      toast({
+        title: "Ошибка сохранения",
+        description: error instanceof Error ? error.message : 'Не удалось сохранить клиента',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -48,10 +68,35 @@ export default function ClientsPage({ clients, onAdd, onUpdate, onDelete }: Clie
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Удалить клиента?')) {
-      await onDelete(id)
+  const handleDeleteClick = (id: string) => {
+    setClientToDelete(id)
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (clientToDelete) {
+      try {
+        await onDelete(clientToDelete)
+        toast({
+          title: "Клиент удален",
+          description: "Клиент успешно удален",
+          variant: "default",
+        })
+        setShowDeleteConfirmation(false)
+        setClientToDelete(null)
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить клиента",
+          variant: "destructive",
+        })
+      }
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false)
+    setClientToDelete(null)
   }
 
   return (
@@ -82,7 +127,9 @@ export default function ClientsPage({ clients, onAdd, onUpdate, onDelete }: Clie
         </button>
       </div>
 
-      {clients.length === 0 ? (
+      {isLoading ? (
+        <ClientsSkeleton />
+      ) : clients.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: 'var(--radius-lg)' }}>
           <p style={{ fontSize: '1.125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
             Клиенты еще не добавлены
@@ -151,7 +198,7 @@ export default function ClientsPage({ clients, onAdd, onUpdate, onDelete }: Clie
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(client._id)}
+                        onClick={() => handleDeleteClick(client._id)}
                         style={{
                           padding: '0.5rem',
                           background: '#fee2e2',
@@ -307,6 +354,108 @@ export default function ClientsPage({ clients, onAdd, onUpdate, onDelete }: Clie
               </button>
             </div>
           </form>
+        </div>
+      </ModalPortal>
+
+      {/* Диалог подтверждения удаления */}
+      <ModalPortal isOpen={showDeleteConfirmation}>
+        <div
+          style={{
+            background: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-xl)',
+            width: '100%',
+            maxWidth: '400px',
+            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                background: '#fef2f2',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1rem',
+              }}
+            >
+              <AlertTriangle size={28} color="#ef4444" />
+            </div>
+            
+            <h3
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                color: 'var(--color-text-primary)',
+                marginBottom: '0.75rem',
+              }}
+            >
+              Подтверждение удаления
+            </h3>
+            
+            <p
+              style={{
+                fontSize: '0.9375rem',
+                color: 'var(--color-text-secondary)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              Вы действительно хотите удалить этого клиента? Это действие нельзя отменить.
+            </p>
+            
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                width: '100%',
+              }}
+            >
+              <button
+                onClick={handleCancelDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: 'var(--color-bg-light)',
+                  color: 'var(--color-text-primary)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Отмена
+              </button>
+              
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
         </div>
       </ModalPortal>
     </div>

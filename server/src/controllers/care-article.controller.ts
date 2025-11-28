@@ -7,7 +7,7 @@ import asyncHandler from '../utils/async-handler';
 // @route   GET /api/care
 // @access  Public
 export const getCareArticles = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const articles = await CareArticle.find();
+  const articles = await CareArticle.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
@@ -16,7 +16,7 @@ export const getCareArticles = asyncHandler(async (req: Request, res: Response, 
   });
 });
 
-// @desc    Get single care article
+// @desc    Get single care article by ID
 // @route   GET /api/care/:id
 // @access  Public
 export const getCareArticle = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -24,6 +24,22 @@ export const getCareArticle = asyncHandler(async (req: Request, res: Response, n
 
   if (!article) {
     return next(new ErrorResponse(`Care article not found with id of ${req.params.id}`, 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: article
+  });
+});
+
+// @desc    Get single care article by slug
+// @route   GET /api/care/slug/:slug
+// @access  Public
+export const getCareArticleBySlug = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const article = await CareArticle.findOne({ slug: req.params.slug });
+
+  if (!article) {
+    return next(new ErrorResponse(`Care article not found with slug of ${req.params.slug}`, 404));
   }
 
   res.status(200).json({

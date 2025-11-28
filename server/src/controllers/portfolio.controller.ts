@@ -7,7 +7,7 @@ import asyncHandler from '../utils/async-handler';
 // @route   GET /api/portfolio
 // @access  Public
 export const getPortfolioItems = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const portfolioItems = await Portfolio.find();
+  const portfolioItems = await Portfolio.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,

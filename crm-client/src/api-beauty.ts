@@ -301,6 +301,6 @@ export const uploadAPI = {
 
     const data = await response.json()
     if (!data.success) throw new Error(data.message)
-    return data.data.url
+    return data.data.fileUrl
   }
 }

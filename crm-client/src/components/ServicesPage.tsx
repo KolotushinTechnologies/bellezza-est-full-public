@@ -1,24 +1,35 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Edit2, Trash2, X } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
+import { Plus, Edit2, Trash2, X, AlertTriangle } from "lucide-react"
 import type { Service } from "../App"
 import { uploadAPI } from "../api-beauty"
 import ModalPortal from "./ModalPortal"
+import { useToast } from "../../hooks/use-toast"
+import ServicesSkeleton from "./ServicesSkeleton"
+import ImageLoader from "./ImageLoader"
 
 interface ServicesPageProps {
   services: Service[]
   onAdd: (service: Omit<Service, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>
   onUpdate: (id: string, service: Partial<Service>) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  isLoading?: boolean
 }
 
-export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: ServicesPageProps) {
+export default function ServicesPage({ services, onAdd, onUpdate, onDelete, isLoading = false }: ServicesPageProps) {
+  const { toast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const highlightRef = useRef<HTMLDivElement>(null)
   const [showModal, setShowModal] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [formData, setFormData] = useState({ title: '', description: '', image: '' })
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,14 +37,28 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
     try {
       if (editingService) {
         await onUpdate(editingService._id, formData)
+        toast({
+          title: "Услуга обновлена",
+          description: "Изменения успешно сохранены",
+          variant: "default",
+        })
       } else {
         await onAdd(formData)
+        toast({
+          title: "Услуга добавлена",
+          description: "Новая услуга успешно добавлена",
+          variant: "default",
+        })
       }
       setShowModal(false)
       setFormData({ title: '', description: '', image: '' })
       setEditingService(null)
     } catch (error) {
-      alert('Ошибка при сохранении')
+      toast({
+        title: "Ошибка сохранения",
+        description: error instanceof Error ? error.message : 'Не удалось сохранить услугу',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -45,11 +70,49 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Удалить услугу?')) {
-      await onDelete(id)
+  const handleDeleteClick = (id: string) => {
+    setServiceToDelete(id)
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (serviceToDelete) {
+      try {
+        await onDelete(serviceToDelete)
+        toast({
+          title: "Услуга удалена",
+          description: "Услуга успешно удалена",
+          variant: "default",
+        })
+        setShowDeleteConfirmation(false)
+        setServiceToDelete(null)
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить услугу",
+          variant: "destructive",
+        })
+      }
     }
   }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false)
+    setServiceToDelete(null)
+  }
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      
+      // Убрать подсветку через 1.5 секунды
+      const timer = setTimeout(() => {
+        setSearchParams({}, { replace: true })
+      }, 1500)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [highlightId, services, setSearchParams])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -59,8 +122,17 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
     try {
       const url = await uploadAPI.uploadImage(file)
       setFormData({ ...formData, image: url })
+      toast({
+        title: "Изображение загружено",
+        description: "Изображение успешно загружено",
+        variant: "default",
+      })
     } catch (error) {
-      alert('Ошибка загрузки изображения')
+      toast({
+        title: "Ошибка загрузки",
+        description: error instanceof Error ? error.message : 'Не удалось загрузить изображение',
+        variant: "destructive",
+      })
     } finally {
       setUploading(false)
     }
@@ -94,7 +166,9 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
         </button>
       </div>
 
-      {services.length === 0 ? (
+      {isLoading ? (
+        <ServicesSkeleton />
+      ) : services.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: 'var(--radius-lg)' }}>
           <p style={{ fontSize: '1.125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
             Услуги еще не добавлены
@@ -108,14 +182,16 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
           {services.map((service) => (
             <div
               key={service._id}
+              ref={service._id === highlightId ? highlightRef : null}
               style={{
-                background: 'white',
+                background: service._id === highlightId ? 'rgba(16, 185, 129, 0.15)' : 'white',
                 borderRadius: 'var(--radius-lg)',
                 overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                boxShadow: service._id === highlightId ? '0 0 0 2px #10b981' : '0 1px 3px rgba(0,0,0,0.1)',
+                transition: 'all 0.3s ease'
               }}
             >
-              <img
+              <ImageLoader
                 src={service.image || '/placeholder.svg'}
                 alt={service.title}
                 style={{ width: '100%', height: '200px', objectFit: 'cover' }}
@@ -147,7 +223,7 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
                     Изменить
                   </button>
                   <button
-                    onClick={() => handleDelete(service._id)}
+                    onClick={() => handleDeleteClick(service._id)}
                     style={{
                       flex: 1,
                       padding: '0.5rem',
@@ -290,6 +366,108 @@ export default function ServicesPage({ services, onAdd, onUpdate, onDelete }: Se
               </button>
             </div>
           </form>
+        </div>
+      </ModalPortal>
+
+      {/* Диалог подтверждения удаления */}
+      <ModalPortal isOpen={showDeleteConfirmation}>
+        <div
+          style={{
+            background: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-xl)',
+            width: '100%',
+            maxWidth: '400px',
+            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                background: '#fef2f2',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1rem',
+              }}
+            >
+              <AlertTriangle size={28} color="#ef4444" />
+            </div>
+            
+            <h3
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                color: 'var(--color-text-primary)',
+                marginBottom: '0.75rem',
+              }}
+            >
+              Подтверждение удаления
+            </h3>
+            
+            <p
+              style={{
+                fontSize: '0.9375rem',
+                color: 'var(--color-text-secondary)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              Вы действительно хотите удалить эту услугу? Это действие нельзя отменить.
+            </p>
+            
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                width: '100%',
+              }}
+            >
+              <button
+                onClick={handleCancelDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: 'var(--color-bg-light)',
+                  color: 'var(--color-text-primary)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Отмена
+              </button>
+              
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
         </div>
       </ModalPortal>
     </div>

@@ -49,9 +49,13 @@ export async function getPortfolio(): Promise<PortfolioItem[]> {
 // Care Articles
 export interface CareArticle {
   _id: string;
+  slug: string;
   title: string;
   excerpt: string;
+  content: string;
   image: string;
+  sidebarTips: string[];
+  sidebarTimeText: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,12 +73,26 @@ export async function getCareArticles(): Promise<CareArticle[]> {
   }
 }
 
+export async function getCareArticleBySlug(slug: string): Promise<CareArticle | null> {
+  try {
+    const res = await fetch(`${API_URL}/care/slug/${slug}`, {
+      cache: 'no-store',
+    });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch (error) {
+    console.error('Error fetching care article:', error);
+    return null;
+  }
+}
+
 // Blog Posts
 export interface BlogPost {
   _id: string;
   slug: string;
   title: string;
   excerpt: string;
+  content: string;
   date: string;
   image: string;
   createdAt: string;

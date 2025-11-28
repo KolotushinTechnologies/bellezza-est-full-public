@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getCareArticles,
   getCareArticle,
+  getCareArticleBySlug,
   createCareArticle,
   updateCareArticle,
   deleteCareArticle,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getCareArticles);
+router.get('/slug/:slug', getCareArticleBySlug);
 router.get('/:id', getCareArticle);
 
 // Protected routes (admin only)

@@ -1,0 +1,125 @@
+.care-article-content {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: rgb(55 65 81);
+}
+
+.care-article-content h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  color: rgb(17 24 39);
+  line-height: 1.2;
+}
+
+.care-article-content h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: rgb(17 24 39);
+  line-height: 1.3;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgb(229 231 235);
+}
+
+.care-article-content h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: rgb(55 65 81);
+  line-height: 1.4;
+}
+
+.care-article-content h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: rgb(17 24 39);
+  line-height: 1.4;
+}
+
+.care-article-content h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: rgb(17 24 39);
+  line-height: 1.5;
+}
+
+.care-article-content h6 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: rgb(107 114 128);
+  line-height: 1.5;
+}
+
+.care-article-content p {
+  margin-bottom: 1.5rem;
+}
+
+.care-article-content ul,
+.care-article-content ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.75rem;
+}
+
+.care-article-content ul {
+  list-style-type: none;
+}
+
+.care-article-content ul li {
+  position: relative;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.care-article-content ul li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: rgb(75 85 99);
+  font-weight: 600;
+}
+
+.care-article-content ol {
+  list-style-type: decimal;
+}
+
+.care-article-content ol li {
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.care-article-content a {
+  color: rgb(55 65 81);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.care-article-content a:hover {
+  color: rgb(17 24 39);
+}
+
+.care-article-content strong {
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+.care-article-content em {
+  font-style: italic;
+}
+
+.care-article-content blockquote {
+  border-left: 4px solid rgb(209 213 219);
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: rgb(107 114 128);
+}

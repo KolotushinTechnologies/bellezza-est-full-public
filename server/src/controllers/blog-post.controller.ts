@@ -7,7 +7,7 @@ import asyncHandler from '../utils/async-handler';
 // @route   GET /api/blog
 // @access  Public
 export const getBlogPosts = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const posts = await BlogPost.find();
+  const posts = await BlogPost.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,

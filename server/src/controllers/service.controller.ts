@@ -7,7 +7,7 @@ import asyncHandler from '../utils/async-handler';
 // @route   GET /api/services
 // @access  Public
 export const getServices = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const services = await Service.find();
+  const services = await Service.find().sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,

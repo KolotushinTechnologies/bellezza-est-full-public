@@ -1,24 +1,32 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Edit2, Trash2, X } from "lucide-react"
+import { Plus, Edit2, Trash2, X, AlertTriangle } from "lucide-react"
 import type { BlogPost } from "../App"
 import { uploadAPI } from "../api-beauty"
 import ModalPortal from "./ModalPortal"
+import RichTextEditor from "./RichTextEditor"
+import { useToast } from "../../hooks/use-toast"
+import BlogPostsSkeleton from "./BlogPostsSkeleton"
+import ImageLoader from "./ImageLoader"
 
 interface BlogPostsPageProps {
   posts: BlogPost[]
   onAdd: (post: Omit<BlogPost, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>
   onUpdate: (id: string, post: Partial<BlogPost>) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  isLoading?: boolean
 }
 
-export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: BlogPostsPageProps) {
+export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete, isLoading = false }: BlogPostsPageProps) {
+  const { toast } = useToast()
   const [showModal, setShowModal] = useState(false)
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null)
-  const [formData, setFormData] = useState({ slug: '', title: '', excerpt: '', date: '', image: '' })
+  const [formData, setFormData] = useState({ slug: '', title: '', excerpt: '', content: '', date: '', image: '' })
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,14 +34,28 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
     try {
       if (editingPost) {
         await onUpdate(editingPost._id, formData)
+        toast({
+          title: "Пост обновлен",
+          description: "Изменения успешно сохранены",
+          variant: "default",
+        })
       } else {
         await onAdd(formData)
+        toast({
+          title: "Пост создан",
+          description: "Новый пост успешно добавлен",
+          variant: "default",
+        })
       }
       setShowModal(false)
-      setFormData({ slug: '', title: '', excerpt: '', date: '', image: '' })
+      setFormData({ slug: '', title: '', excerpt: '', content: '', date: '', image: '' })
       setEditingPost(null)
     } catch (error) {
-      alert('Ошибка при сохранении')
+      toast({
+        title: "Ошибка сохранения",
+        description: error instanceof Error ? error.message : 'Не удалось сохранить пост',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -41,14 +63,39 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
 
   const handleEdit = (post: BlogPost) => {
     setEditingPost(post)
-    setFormData({ slug: post.slug, title: post.title, excerpt: post.excerpt, date: post.date, image: post.image })
+    setFormData({ slug: post.slug, title: post.title, excerpt: post.excerpt, content: post.content, date: post.date, image: post.image })
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Удалить пост?')) {
-      await onDelete(id)
+  const handleDeleteClick = (id: string) => {
+    setPostToDelete(id)
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (postToDelete) {
+      try {
+        await onDelete(postToDelete)
+        toast({
+          title: "Пост удален",
+          description: "Пост успешно удален",
+          variant: "default",
+        })
+        setShowDeleteConfirmation(false)
+        setPostToDelete(null)
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить пост",
+          variant: "destructive",
+        })
+      }
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false)
+    setPostToDelete(null)
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,8 +106,17 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
     try {
       const url = await uploadAPI.uploadImage(file)
       setFormData({ ...formData, image: url })
+      toast({
+        title: "Изображение загружено",
+        description: "Изображение успешно загружено",
+        variant: "default",
+      })
     } catch (error) {
-      alert('Ошибка загрузки изображения')
+      toast({
+        title: "Ошибка загрузки",
+        description: error instanceof Error ? error.message : 'Не удалось загрузить изображение',
+        variant: "destructive",
+      })
     } finally {
       setUploading(false)
     }
@@ -73,7 +129,7 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
         <button
           onClick={() => {
             setEditingPost(null)
-            setFormData({ slug: '', title: '', excerpt: '', date: new Date().toISOString().split('T')[0], image: '' })
+            setFormData({ slug: '', title: '', excerpt: '', content: '', date: new Date().toISOString().split('T')[0], image: '' })
             setShowModal(true)
           }}
           style={{
@@ -94,13 +150,15 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
         </button>
       </div>
 
-      {posts.length === 0 ? (
+      {isLoading ? (
+        <BlogPostsSkeleton />
+      ) : posts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: 'var(--radius-lg)' }}>
           <p style={{ fontSize: '1.125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
-            Посты еще не добавлены
+            Посты блога еще не добавлены
           </p>
           <p style={{ color: 'var(--color-text-light)' }}>
-            Нажмите "Добавить пост" чтобы создать первый пост в блоге
+            Нажмите "Добавить пост" чтобы создать первый пост
           </p>
         </div>
       ) : (
@@ -117,7 +175,7 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
                 flexDirection: 'row'
               }}
             >
-              <img
+              <ImageLoader
                 src={post.image || '/placeholder.svg'}
                 alt={post.title}
                 style={{ width: '280px', height: '200px', objectFit: 'cover', flexShrink: 0 }}
@@ -150,7 +208,7 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
                     Изменить
                   </button>
                   <button
-                    onClick={() => handleDelete(post._id)}
+                    onClick={() => handleDeleteClick(post._id)}
                     style={{
                       padding: '0.5rem 1rem',
                       background: '#fee2e2',
@@ -258,6 +316,17 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                Полный текст статьи *
+              </label>
+              <RichTextEditor
+                value={formData.content}
+                onChange={(value) => setFormData({ ...formData, content: value })}
+                placeholder="Введите текст статьи..."
+              />
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
                 Дата *
               </label>
               <input
@@ -331,6 +400,108 @@ export default function BlogPostsPage({ posts, onAdd, onUpdate, onDelete }: Blog
               </button>
             </div>
           </form>
+        </div>
+      </ModalPortal>
+
+      {/* Диалог подтверждения удаления */}
+      <ModalPortal isOpen={showDeleteConfirmation}>
+        <div
+          style={{
+            background: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-xl)',
+            width: '100%',
+            maxWidth: '400px',
+            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                background: '#fef2f2',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1rem',
+              }}
+            >
+              <AlertTriangle size={28} color="#ef4444" />
+            </div>
+            
+            <h3
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                color: 'var(--color-text-primary)',
+                marginBottom: '0.75rem',
+              }}
+            >
+              Подтверждение удаления
+            </h3>
+            
+            <p
+              style={{
+                fontSize: '0.9375rem',
+                color: 'var(--color-text-secondary)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              Вы действительно хотите удалить этот пост? Это действие нельзя отменить.
+            </p>
+            
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                width: '100%',
+              }}
+            >
+              <button
+                onClick={handleCancelDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: 'var(--color-bg-light)',
+                  color: 'var(--color-text-primary)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Отмена
+              </button>
+              
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
         </div>
       </ModalPortal>
     </div>

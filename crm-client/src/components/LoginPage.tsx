@@ -3,16 +3,14 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Sparkles, Lock, Mail, AlertCircle } from "lucide-react"
 import { login as apiLogin } from "../api"
 import { useAuth } from "../context/AuthContext"
 
-interface LoginPageProps {
-  onLogin?: () => void
-}
-
-export default function LoginPage({ onLogin }: LoginPageProps) {
+export default function LoginPage() {
   const { login } = useAuth()
+  const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -42,10 +40,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       // Update auth context
       login(token, userData)
       
-      // Call onLogin callback if provided
-      if (onLogin) {
-        onLogin()
-      }
+      // Navigate to dashboard
+      navigate('/')
     } catch (err) {
       console.error("Login error:", err)
       setError("Неверный email или пароль")

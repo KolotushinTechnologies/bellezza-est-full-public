@@ -4,6 +4,7 @@ export interface IBlogPost extends Document {
   slug: string;
   title: string;
   excerpt: string;
+  content: string;
   date: string;
   image: string;
   createdAt: Date;
@@ -27,6 +28,10 @@ const BlogPostSchema = new Schema<IBlogPost>(
     excerpt: {
       type: String,
       required: [true, 'Please add an excerpt'],
+    },
+    content: {
+      type: String,
+      required: [true, 'Please add content'],
     },
     date: {
       type: String,

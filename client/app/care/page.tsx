@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react"
 import { getCareArticles } from "@/lib/api"
 import { ImageLoader } from "@/components/image-loader"
 import { CareSkeleton } from "@/components/skeletons/care-skeleton"
+import Link from "next/link"
 
 async function CareArticlesList() {
   const careArticles = await getCareArticles()
@@ -30,9 +31,10 @@ async function CareArticlesList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {careArticles.map((article, index) => (
-        <article
+        <Link
           key={article._id}
-          className="group rounded-3xl overflow-hidden bg-card border border-border/50 hover:border-border transition-all duration-500 hover:shadow-xl"
+          href={`/care/${article.slug || article._id}`}
+          className="group rounded-3xl overflow-hidden bg-card border border-border/50 hover:border-border transition-all duration-500 hover:shadow-xl block"
         >
           {/* Image with loader */}
           <ImageLoader
@@ -54,7 +56,7 @@ async function CareArticlesList() {
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </span>
           </div>
-        </article>
+        </Link>
       ))}
     </div>
   )

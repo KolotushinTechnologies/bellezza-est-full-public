@@ -10,9 +10,10 @@ interface ImageLoaderProps {
   className?: string
   aspectRatio?: string
   priority?: boolean
+  objectFit?: "cover" | "contain"
 }
 
-export function ImageLoader({ src, alt, className, aspectRatio = "aspect-[4/3]", priority = false }: ImageLoaderProps) {
+export function ImageLoader({ src, alt, className, aspectRatio = "aspect-[4/3]", priority = false, objectFit = "cover" }: ImageLoaderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   return (
@@ -30,7 +31,7 @@ export function ImageLoader({ src, alt, className, aspectRatio = "aspect-[4/3]",
         alt={alt}
         fill
         className={cn(
-          "object-cover transition-opacity duration-500",
+          `object-${objectFit} transition-opacity duration-500`,
           isLoading ? "opacity-0" : "opacity-100"
         )}
         onLoad={() => setIsLoading(false)}

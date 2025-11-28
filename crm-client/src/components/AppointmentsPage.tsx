@@ -1,9 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Edit2, Trash2, X, Calendar } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { useSearchParams } from "react-router-dom"
+import { Plus, Edit2, Trash2, X, Calendar, AlertTriangle } from "lucide-react"
 import type { Appointment, Client, Service } from "../App"
 import ModalPortal from "./ModalPortal"
+import { useToast } from "../../hooks/use-toast"
+import AppointmentsSkeleton from "./AppointmentsSkeleton"
 
 interface AppointmentsPageProps {
   appointments: Appointment[]
@@ -12,10 +15,17 @@ interface AppointmentsPageProps {
   onAdd: (appointment: Omit<Appointment, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>
   onUpdate: (id: string, appointment: Partial<Appointment>) => Promise<void>
   onDelete: (id: string) => Promise<void>
+  isLoading?: boolean
 }
 
-export default function AppointmentsPage({ appointments, clients, services, onAdd, onUpdate, onDelete }: AppointmentsPageProps) {
+export default function AppointmentsPage({ appointments, clients, services, onAdd, onUpdate, onDelete, isLoading = false }: AppointmentsPageProps) {
+  const { toast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const highlightRef = useRef<HTMLTableRowElement>(null)
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null)
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
   const [formData, setFormData] = useState({ 
     client: '', 
@@ -32,16 +42,32 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
     e.preventDefault()
     setLoading(true)
     try {
+      console.log('Submitting appointment data:', formData)
       if (editingAppointment) {
         await onUpdate(editingAppointment._id, formData)
+        toast({
+          title: "Запись обновлена",
+          description: "Изменения успешно сохранены",
+          variant: "default",
+        })
       } else {
         await onAdd(formData)
+        toast({
+          title: "Запись создана",
+          description: "Новая запись успешно добавлена",
+          variant: "default",
+        })
       }
       setShowModal(false)
       setFormData({ client: '', service: '', date: '', startTime: '', endTime: '', status: 'pending', notes: '' })
       setEditingAppointment(null)
     } catch (error) {
-      alert('Ошибка при сохранении')
+      console.error('Error saving appointment:', error)
+      toast({
+        title: "Ошибка сохранения",
+        description: error instanceof Error ? error.message : 'Не удалось сохранить запись',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -50,8 +76,8 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
   const handleEdit = (appointment: Appointment) => {
     setEditingAppointment(appointment)
     setFormData({ 
-      client: appointment.client,
-      service: appointment.service,
+      client: typeof appointment.client === 'string' ? appointment.client : appointment.client._id,
+      service: typeof appointment.service === 'string' ? appointment.service : appointment.service._id,
       date: appointment.date,
       startTime: appointment.startTime,
       endTime: appointment.endTime,
@@ -61,10 +87,35 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Удалить запись?')) {
-      await onDelete(id)
+  const handleDeleteClick = (id: string) => {
+    setAppointmentToDelete(id)
+    setShowDeleteConfirmation(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (appointmentToDelete) {
+      try {
+        await onDelete(appointmentToDelete)
+        toast({
+          title: "Запись удалена",
+          description: "Запись успешно удалена",
+          variant: "default",
+        })
+        setShowDeleteConfirmation(false)
+        setAppointmentToDelete(null)
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить запись",
+          variant: "destructive",
+        })
+      }
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false)
+    setAppointmentToDelete(null)
   }
 
   const getStatusColor = (status: string) => {
@@ -86,15 +137,42 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
     }
   }
 
-  const getClientName = (clientId: string) => {
-    const client = clients.find(c => c._id === clientId)
-    return client?.name || 'Неизвестно'
+  const getClientName = (client: string | { _id: string; name: string; phone: string; email?: string }) => {
+    if (typeof client === 'string') {
+      const foundClient = clients.find(c => c._id === client)
+      return foundClient?.name || 'Неизвестно'
+    }
+    return client.name
   }
 
-  const getServiceName = (serviceId: string) => {
-    const service = services.find(s => s._id === serviceId)
-    return service?.title || 'Неизвестно'
+  const getServiceName = (service: string | { _id: string; title: string; description: string }) => {
+    if (typeof service === 'string') {
+      const foundService = services.find(s => s._id === service)
+      return foundService?.title || 'Неизвестно'
+    }
+    return service.title
   }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}.${month}.${year}`
+  }
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      
+      // Убрать подсветку через 1.5 секунды
+      const timer = setTimeout(() => {
+        setSearchParams({}, { replace: true })
+      }, 1500)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [highlightId, appointments, setSearchParams])
 
   return (
     <div>
@@ -124,7 +202,9 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
         </button>
       </div>
 
-      {appointments.length === 0 ? (
+      {isLoading ? (
+        <AppointmentsSkeleton />
+      ) : appointments.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'white', borderRadius: 'var(--radius-lg)' }}>
           <p style={{ fontSize: '1.125rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
             Записей пока нет
@@ -147,7 +227,15 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
             </thead>
             <tbody>
               {appointments.map((appointment) => (
-                <tr key={appointment._id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <tr 
+                  key={appointment._id} 
+                  ref={appointment._id === highlightId ? highlightRef : null}
+                  style={{ 
+                    borderBottom: '1px solid var(--color-border)',
+                    background: appointment._id === highlightId ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
                   <td style={{ padding: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <div style={{ 
@@ -166,7 +254,7 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
                   </td>
                   <td style={{ padding: '1rem', color: 'var(--color-text-secondary)' }}>{getServiceName(appointment.service)}</td>
                   <td style={{ padding: '1rem', color: 'var(--color-text-secondary)' }}>
-                    {appointment.date} {appointment.startTime}-{appointment.endTime}
+                    {formatDate(appointment.date)} {appointment.startTime}-{appointment.endTime}
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{
@@ -196,7 +284,7 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(appointment._id)}
+                        onClick={() => handleDeleteClick(appointment._id)}
                         style={{
                           padding: '0.5rem',
                           background: '#fee2e2',
@@ -423,6 +511,108 @@ export default function AppointmentsPage({ appointments, clients, services, onAd
               </button>
             </div>
           </form>
+        </div>
+      </ModalPortal>
+
+      {/* Диалог подтверждения удаления */}
+      <ModalPortal isOpen={showDeleteConfirmation}>
+        <div
+          style={{
+            background: 'var(--color-bg-card)',
+            borderRadius: 'var(--radius-xl)',
+            width: '100%',
+            maxWidth: '400px',
+            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              padding: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                background: '#fef2f2',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1rem',
+              }}
+            >
+              <AlertTriangle size={28} color="#ef4444" />
+            </div>
+            
+            <h3
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                color: 'var(--color-text-primary)',
+                marginBottom: '0.75rem',
+              }}
+            >
+              Подтверждение удаления
+            </h3>
+            
+            <p
+              style={{
+                fontSize: '0.9375rem',
+                color: 'var(--color-text-secondary)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              Вы действительно хотите удалить эту запись? Это действие нельзя отменить.
+            </p>
+            
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                width: '100%',
+              }}
+            >
+              <button
+                onClick={handleCancelDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: 'var(--color-bg-light)',
+                  color: 'var(--color-text-primary)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Отмена
+              </button>
+              
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
         </div>
       </ModalPortal>
     </div>

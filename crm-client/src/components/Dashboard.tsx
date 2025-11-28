@@ -40,7 +40,15 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loadingStates, setLoadingStates] = useState({
+    services: false,
+    portfolio: false,
+    care: false,
+    blog: false,
+    clients: false,
+    appointments: false,
+    dashboard: false
+  })
   const [error, setError] = useState<string | null>(null)
 
   const updateHash = useCallback((page: PageType) => {
@@ -67,37 +75,112 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     return () => window.removeEventListener('popstate', handleHashChange)
   }, [])
 
+  // Fetch data based on current page
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchPageData = async () => {
       try {
-        setLoading(true)
         setError(null)
         
-        const [servicesData, portfolioData, careData, blogData, clientsData, appointmentsData] = await Promise.all([
-          servicesAPI.getAll(),
-          portfolioAPI.getAll(),
-          careAPI.getAll(),
-          blogAPI.getAll(),
-          clientsAPI.getAll(),
-          appointmentsAPI.getAll()
-        ])
-        
-        setServices(servicesData)
-        setPortfolio(portfolioData)
-        setCareArticles(careData)
-        setBlogPosts(blogData)
-        setClients(clientsData)
-        setAppointments(appointmentsData)
+        switch (currentPage) {
+          case 'dashboard':
+            // For dashboard, load all data
+            if (!loadingStates.dashboard) {
+              setLoadingStates(prev => ({ ...prev, dashboard: true }))
+              const [servicesData, portfolioData, careData, blogData, clientsData, appointmentsData] = await Promise.all([
+                services.length === 0 ? servicesAPI.getAll() : Promise.resolve(services),
+                portfolio.length === 0 ? portfolioAPI.getAll() : Promise.resolve(portfolio),
+                careArticles.length === 0 ? careAPI.getAll() : Promise.resolve(careArticles),
+                blogPosts.length === 0 ? blogAPI.getAll() : Promise.resolve(blogPosts),
+                clients.length === 0 ? clientsAPI.getAll() : Promise.resolve(clients),
+                appointments.length === 0 ? appointmentsAPI.getAll() : Promise.resolve(appointments)
+              ])
+              setServices(servicesData)
+              setPortfolio(portfolioData)
+              setCareArticles(careData)
+              setBlogPosts(blogData)
+              setClients(clientsData)
+              setAppointments(appointmentsData)
+              setLoadingStates(prev => ({ ...prev, dashboard: false }))
+            }
+            break
+            
+          case 'services':
+            if (services.length === 0 && !loadingStates.services) {
+              setLoadingStates(prev => ({ ...prev, services: true }))
+              const data = await servicesAPI.getAll()
+              setServices(data)
+              setLoadingStates(prev => ({ ...prev, services: false }))
+            }
+            break
+            
+          case 'portfolio':
+            if (portfolio.length === 0 && !loadingStates.portfolio) {
+              setLoadingStates(prev => ({ ...prev, portfolio: true }))
+              const data = await portfolioAPI.getAll()
+              setPortfolio(data)
+              setLoadingStates(prev => ({ ...prev, portfolio: false }))
+            }
+            break
+            
+          case 'care':
+            if (careArticles.length === 0 && !loadingStates.care) {
+              setLoadingStates(prev => ({ ...prev, care: true }))
+              const data = await careAPI.getAll()
+              setCareArticles(data)
+              setLoadingStates(prev => ({ ...prev, care: false }))
+            }
+            break
+            
+          case 'blog':
+            if (blogPosts.length === 0 && !loadingStates.blog) {
+              setLoadingStates(prev => ({ ...prev, blog: true }))
+              const data = await blogAPI.getAll()
+              setBlogPosts(data)
+              setLoadingStates(prev => ({ ...prev, blog: false }))
+            }
+            break
+            
+          case 'clients':
+            if (clients.length === 0 && !loadingStates.clients) {
+              setLoadingStates(prev => ({ ...prev, clients: true }))
+              const data = await clientsAPI.getAll()
+              setClients(data)
+              setLoadingStates(prev => ({ ...prev, clients: false }))
+            }
+            break
+            
+          case 'appointments':
+            // Appointments page needs clients and services too
+            if (!loadingStates.appointments) {
+              setLoadingStates(prev => ({ ...prev, appointments: true }))
+              const promises = []
+              if (appointments.length === 0) promises.push(appointmentsAPI.getAll())
+              if (clients.length === 0) promises.push(clientsAPI.getAll())
+              if (services.length === 0) promises.push(servicesAPI.getAll())
+              
+              if (promises.length > 0) {
+                const results = await Promise.all([
+                  appointments.length === 0 ? appointmentsAPI.getAll() : Promise.resolve(appointments),
+                  clients.length === 0 ? clientsAPI.getAll() : Promise.resolve(clients),
+                  services.length === 0 ? servicesAPI.getAll() : Promise.resolve(services)
+                ])
+                setAppointments(results[0])
+                setClients(results[1])
+                setServices(results[2])
+              }
+              setLoadingStates(prev => ({ ...prev, appointments: false }))
+            }
+            break
+        }
       } catch (err) {
         console.error("Error fetching data:", err)
         setError("Ошибка загрузки данных")
-      } finally {
-        setLoading(false)
+        setLoadingStates(prev => ({ ...prev, [currentPage]: false }))
       }
     }
     
-    fetchData()
-  }, [])
+    fetchPageData()
+  }, [currentPage])
 
   const handleLogout = () => {
     authLogout()
@@ -302,11 +385,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           minHeight: "100vh",
         }}
       >
-        {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
-            <p style={{ fontSize: "1.125rem", color: "var(--color-text-secondary)" }}>Загрузка...</p>
-          </div>
-        ) : error ? (
+        {error ? (
           <div style={{ 
             display: "flex", 
             justifyContent: "center", 
@@ -348,6 +427,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 onAdd={handleAddService}
                 onUpdate={handleUpdateService}
                 onDelete={handleDeleteService}
+                isLoading={loadingStates.services}
               />
             )}
             {currentPage === "portfolio" && (

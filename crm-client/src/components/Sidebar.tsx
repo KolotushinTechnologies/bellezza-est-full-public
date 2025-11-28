@@ -1,26 +1,25 @@
 "use client"
 
 import { useState } from "react"
+import { NavLink } from "react-router-dom"
 import { LayoutDashboard, Sparkles, LogOut, AlertTriangle, Briefcase, Image, BookOpen, FileText, Users, Calendar } from "lucide-react"
 import ModalPortal from "./ModalPortal"
 
 interface SidebarProps {
-  currentPage: "dashboard" | "services" | "portfolio" | "care" | "blog" | "clients" | "appointments"
-  onNavigate: (page: "dashboard" | "services" | "portfolio" | "care" | "blog" | "clients" | "appointments") => void
   onLogout: () => void
 }
 
-export default function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
+export default function Sidebar({ onLogout }: SidebarProps) {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
   
   const menuItems = [
-    { id: "dashboard" as const, label: "Дашборд", icon: LayoutDashboard },
-    { id: "services" as const, label: "Услуги", icon: Briefcase },
-    { id: "portfolio" as const, label: "Портфолио", icon: Image },
-    { id: "care" as const, label: "Уход", icon: BookOpen },
-    { id: "blog" as const, label: "Блог", icon: FileText },
-    { id: "clients" as const, label: "Клиенты", icon: Users },
-    { id: "appointments" as const, label: "Записи", icon: Calendar },
+    { path: "/", label: "Дашборд", icon: LayoutDashboard },
+    { path: "/services", label: "Услуги", icon: Briefcase },
+    { path: "/portfolio", label: "Портфолио", icon: Image },
+    { path: "/care", label: "Уход", icon: BookOpen },
+    { path: "/blog", label: "Блог", icon: FileText },
+    { path: "/clients", label: "Клиенты", icon: Users },
+    { path: "/appointments", label: "Записи", icon: Calendar },
   ]
 
   return (
@@ -87,17 +86,13 @@ export default function Sidebar({ currentPage, onNavigate, onLogout }: SidebarPr
       <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = currentPage === item.id
 
           return (
-            <a
-              key={item.id}
-              href={item.id === "dashboard" ? "#" : `#${item.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate(item.id);
-              }}
-              style={{
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === "/"}
+              style={({ isActive }) => ({
                 display: "flex",
                 alignItems: "center",
                 gap: "0.75rem",
@@ -112,13 +107,15 @@ export default function Sidebar({ currentPage, onNavigate, onLogout }: SidebarPr
                 transition: "all 0.2s",
                 cursor: "pointer",
                 textDecoration: "none",
-              }}
+              })}
               onMouseEnter={(e) => {
+                const isActive = e.currentTarget.classList.contains('active')
                 if (!isActive) {
                   e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"
                 }
               }}
               onMouseLeave={(e) => {
+                const isActive = e.currentTarget.classList.contains('active')
                 if (!isActive) {
                   e.currentTarget.style.background = "transparent"
                 }
@@ -126,7 +123,7 @@ export default function Sidebar({ currentPage, onNavigate, onLogout }: SidebarPr
             >
               <Icon size={20} />
               {item.label}
-            </a>
+            </NavLink>
           )
         })}
       </nav>
