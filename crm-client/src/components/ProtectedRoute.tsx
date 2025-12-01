@@ -1,4 +1,5 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import UnauthorizedPage from './UnauthorizedPage';
 
@@ -13,9 +14,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, user } = useAuth();
 
-  // Check if user is authenticated
+  // Check if user is authenticated - redirect to login if not
   if (!isAuthenticated) {
-    return <UnauthorizedPage message="Пожалуйста, войдите в систему для доступа к этой странице" />;
+    return <Navigate to="/login" replace />;
   }
 
   // Check if user has required role
