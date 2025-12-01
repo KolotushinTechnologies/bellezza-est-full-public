@@ -18,6 +18,7 @@ import appointmentRoutes from './routes/appointment.routes';
 import portfolioRoutes from './routes/portfolio.routes';
 import careArticleRoutes from './routes/care-article.routes';
 import blogPostRoutes from './routes/blog-post.routes';
+import contactRoutes from './routes/contact.routes';
 
 // Load environment variables
 dotenv.config();
@@ -75,6 +76,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/care', careArticleRoutes);
 app.use('/api/blog', blogPostRoutes);
+app.use('/api/contacts', contactRoutes);
 
 // Health check route
 app.get('/health', (req, res) => {

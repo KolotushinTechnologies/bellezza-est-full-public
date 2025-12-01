@@ -14,6 +14,7 @@ import CareRoute from "./routes/CareRoute"
 import BlogRoute from "./routes/BlogRoute"
 import ClientsRoute from "./routes/ClientsRoute"
 import AppointmentsRoute from "./routes/AppointmentsRoute"
+import ContactsRoute from "./routes/ContactsRoute"
 
 // Beauty Salon Types
 export interface Service {
@@ -118,6 +119,7 @@ function AppContent() {
         <Route path="blog" element={<BlogRoute />} />
         <Route path="clients" element={<ClientsRoute />} />
         <Route path="appointments" element={<AppointmentsRoute />} />
+        <Route path="contacts" element={<ContactsRoute />} />
       </Route>
 
       <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />

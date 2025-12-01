@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Sparkles, Lock, Mail, AlertCircle } from "lucide-react"
+import { Zap, Lock, Mail, AlertCircle } from "lucide-react"
 import { login as apiLogin } from "../api"
 import { useAuth } from "../context/AuthContext"
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
               marginBottom: "1rem",
             }}
           >
-            <Sparkles size={32} color="white" />
+            <Zap size={32} color="white" />
           </div>
           <h1
             style={{

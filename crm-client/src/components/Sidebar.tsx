@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
-import { LayoutDashboard, Sparkles, LogOut, AlertTriangle, Briefcase, Image, BookOpen, FileText, Users, Calendar } from "lucide-react"
+import { LayoutDashboard, Zap, LogOut, AlertTriangle, Briefcase, Image, BookOpen, FileText, Users, Calendar, Phone } from "lucide-react"
 import ModalPortal from "./ModalPortal"
 
 interface SidebarProps {
@@ -20,6 +20,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     { path: "/blog", label: "Блог", icon: FileText },
     { path: "/clients", label: "Клиенты", icon: Users },
     { path: "/appointments", label: "Записи", icon: Calendar },
+    { path: "/contacts", label: "Контакты", icon: Phone },
   ]
 
   return (
@@ -58,7 +59,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
             justifyContent: "center",
           }}
         >
-          <Sparkles size={24} color="white" />
+          <Zap size={24} color="white" />
         </div>
         <div>
           <h2

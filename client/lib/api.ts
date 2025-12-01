@@ -124,3 +124,26 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     return null;
   }
 }
+
+// Contacts
+export interface Contact {
+  _id: string;
+  phone: string;
+  instagram: string;
+  address: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getContact(): Promise<Contact | null> {
+  try {
+    const res = await fetch(`${API_URL}/contacts`, {
+      cache: 'no-store',
+    });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch (error) {
+    console.error('Error fetching contact:', error);
+    return null;
+  }
+}

@@ -474,3 +474,55 @@ export const uploadImage = async (file: File): Promise<string> => {
     throw error;
   }
 };
+
+// Contact management
+export interface Contact {
+  _id: string;
+  phone: string;
+  instagram: string;
+  address: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Get contact info
+export const getContact = async (): Promise<Contact | null> => {
+  try {
+    const response = await fetch(`${API_URL}/contacts`, getFetchOptions());
+    const data: ApiResponse<Contact> = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Failed to fetch contact');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching contact:', error);
+    return null;
+  }
+};
+
+// Update contact info
+export const updateContact = async (contact: {
+  phone: string;
+  instagram: string;
+  address: string;
+}): Promise<Contact> => {
+  try {
+    const response = await fetch(`${API_URL}/contacts`, getFetchOptions({
+      method: 'PUT',
+      body: JSON.stringify(contact),
+    }));
+    
+    const data: ApiResponse<Contact> = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Failed to update contact');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error updating contact:', error);
+    throw error;
+  }
+};
