@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Sidebar from "./Sidebar"
 import DashboardHome from "./DashboardHome"
 import ServicesPage from "./ServicesPage"
@@ -33,7 +33,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     return "dashboard"
   }
   
-  const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage())
+  const [currentPage] = useState<PageType>(getInitialPage())
   const [services, setServices] = useState<Service[]>([])
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([])
   const [careArticles, setCareArticles] = useState<CareArticle[]>([])
@@ -51,29 +51,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   })
   const [error, setError] = useState<string | null>(null)
 
-  const updateHash = useCallback((page: PageType) => {
-    if (typeof window !== 'undefined') {
-      if (page === 'dashboard') {
-        window.history.pushState(null, '', '#')
-      } else {
-        window.history.pushState(null, '', `#${page}`)
-      }
-    }
-  }, [])
   
-  const handlePageChange = useCallback((page: PageType) => {
-    setCurrentPage(page)
-    updateHash(page)
-  }, [updateHash])
-  
-  useEffect(() => {
-    const handleHashChange = () => {
-      setCurrentPage(getInitialPage())
-    }
-    
-    window.addEventListener('popstate', handleHashChange)
-    return () => window.removeEventListener('popstate', handleHashChange)
-  }, [])
 
   // Fetch data based on current page
   useEffect(() => {
@@ -375,7 +353,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar currentPage={currentPage} onNavigate={handlePageChange} onLogout={handleLogout} />
+      <Sidebar onLogout={handleLogout} />
       <main
         style={{
           flex: 1,

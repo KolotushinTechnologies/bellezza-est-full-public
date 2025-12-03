@@ -29,19 +29,38 @@ const app = express();
 // Apply CORS middleware - this should be the first middleware
 // app.use(corsMiddleware);
 
-// Also use the cors package for extra compatibility
-// app.use(cors());
-// Allow all localhost origins for development
+// CORS configuration for production and development
+const allowedOrigins = [
+  // Production domains
+  'https://bellezza-est.ru',
+  'https://www.bellezza-est.ru',
+  'https://crm.bellezza-est.ru',
+  'https://api.bellezza-est.ru',
+  // Development localhost
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:4173',
+];
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     
-    // Allow all localhost origins
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow any localhost origin for development
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
       return callback(null, true);
     }
     
+    console.warn(`CORS blocked origin: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,

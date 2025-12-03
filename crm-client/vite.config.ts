@@ -10,7 +10,7 @@ export default defineConfig({
     host: true,
     port: 5175,
     allowedHosts: [
-      'crm.orhideynhk.ru'
+      'crm.bellezza-est.ru'
     ]
   },
   publicDir: 'public'

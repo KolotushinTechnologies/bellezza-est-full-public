@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Zap, Lock, Mail, AlertCircle } from "lucide-react"
+import { Lock, Mail, AlertCircle } from "lucide-react"
 import { login as apiLogin } from "../api"
 import { useAuth } from "../context/AuthContext"
 
@@ -89,9 +89,10 @@ export default function LoginPage() {
               alignItems: "center",
               justifyContent: "center",
               marginBottom: "1rem",
+              padding: "12px",
             }}
           >
-            <Zap size={32} color="white" />
+            <img src="/logo.svg" alt="Bellezza Logo" style={{ width: "100%", height: "100%" }} />
           </div>
           <h1
             style={{
@@ -110,7 +111,7 @@ export default function LoginPage() {
               textAlign: "center",
             }}
           >
-            от KolTech Pro 1n
+            от KolTech Pro M1
           </p>
         </div>
 
@@ -252,17 +253,6 @@ export default function LoginPage() {
             Войти
           </button>
         </form>
-
-        <p
-          style={{
-            marginTop: "1.5rem",
-            textAlign: "center",
-            fontSize: "0.8125rem",
-            color: "var(--color-text-secondary)",
-          }}
-        >
-          Используйте admin@example.com и пароль admin123 для входа
-        </p>
       </div>
     </div>
   )

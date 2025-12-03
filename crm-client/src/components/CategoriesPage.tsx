@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { Plus, Trash2, X, AlertTriangle } from "lucide-react"
-import type { Category } from "../App"
+import type { Category } from "../types"
 import ModalPortal from "./ModalPortal"
 
 interface CategoriesPageProps {

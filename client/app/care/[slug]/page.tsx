@@ -16,7 +16,7 @@ export default async function CareArticlePage({ params }: { params: Promise<{ sl
   // If not found by slug, try to get by ID (fallback for old articles without slug)
   if (!article) {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/care/${slug}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.bellezza-est.ru/api'}/care/${slug}`, {
         cache: 'no-store',
       });
       const data = await res.json();

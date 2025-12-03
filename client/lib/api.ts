@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bellezza-est.ru/api';
 
 // Services
 export interface Service {
@@ -13,7 +13,7 @@ export interface Service {
 export async function getServices(): Promise<Service[]> {
   try {
     const res = await fetch(`${API_URL}/services`, {
-      cache: 'no-store',
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
     const data = await res.json();
     return data.success ? data.data : [];
@@ -36,7 +36,7 @@ export interface PortfolioItem {
 export async function getPortfolio(): Promise<PortfolioItem[]> {
   try {
     const res = await fetch(`${API_URL}/portfolio`, {
-      cache: 'no-store',
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
     const data = await res.json();
     return data.success ? data.data : [];
@@ -63,7 +63,7 @@ export interface CareArticle {
 export async function getCareArticles(): Promise<CareArticle[]> {
   try {
     const res = await fetch(`${API_URL}/care`, {
-      cache: 'no-store',
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
     const data = await res.json();
     return data.success ? data.data : [];
@@ -76,7 +76,7 @@ export async function getCareArticles(): Promise<CareArticle[]> {
 export async function getCareArticleBySlug(slug: string): Promise<CareArticle | null> {
   try {
     const res = await fetch(`${API_URL}/care/slug/${slug}`, {
-      cache: 'no-store',
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
     const data = await res.json();
     return data.success ? data.data : null;
@@ -102,7 +102,7 @@ export interface BlogPost {
 export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
     const res = await fetch(`${API_URL}/blog`, {
-      cache: 'no-store',
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
     const data = await res.json();
     return data.success ? data.data : [];
@@ -115,7 +115,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
   try {
     const res = await fetch(`${API_URL}/blog/slug/${slug}`, {
-      cache: 'no-store',
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
     });
     const data = await res.json();
     return data.success ? data.data : null;
@@ -138,7 +138,7 @@ export interface Contact {
 export async function getContact(): Promise<Contact | null> {
   try {
     const res = await fetch(`${API_URL}/contacts`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 }, // Revalidate every hour (contacts change rarely)
     });
     const data = await res.json();
     return data.success ? data.data : null;

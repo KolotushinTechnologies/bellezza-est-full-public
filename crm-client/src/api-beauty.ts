@@ -1,6 +1,6 @@
 import type { Service, PortfolioItem, CareArticle, BlogPost, Client, Appointment } from './App'
 
-const API_URL = 'http://localhost:8080/api'
+const API_URL = 'https://api.bellezza-est.ru/api'
 
 // Helper function to get auth token
 const getAuthToken = () => {

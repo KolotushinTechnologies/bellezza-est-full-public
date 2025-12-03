@@ -1,13 +1,61 @@
-import { Suspense } from "react"
+"use client"
+
+import { Suspense, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { getServices } from "@/lib/api"
+import { getServices, Service } from "@/lib/api"
 import { ImageLoader } from "@/components/image-loader"
 import { ServicesSkeleton } from "@/components/skeletons/services-skeleton"
 
-async function ServicesList() {
-  const services = await getServices()
-  
+function ServicesList() {
+  const [services, setServices] = useState<Service[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [highlightedId, setHighlightedId] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const data = await getServices()
+        setServices(data)
+      } catch (error) {
+        console.error('Error fetching services:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchServices()
+  }, [])
+
+  useEffect(() => {
+    // Check if there's a hash in the URL
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      setHighlightedId(hash)
+      
+      // Scroll to the element
+      setTimeout(() => {
+        const element = document.getElementById(hash)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+
+      // Remove highlight after 1.5 seconds
+      const timer = setTimeout(() => {
+        setHighlightedId(null)
+      }, 1500)
+
+      return () => clearTimeout(timer)
+    }
+  }, [services])
+
+  if (isLoading) {
+    return <ServicesSkeleton />
+  }
+
   if (services.length === 0) {
     return (
       <div className="text-center py-20">
@@ -31,22 +79,35 @@ async function ServicesList() {
       {services.map((service, index) => (
         <article
           key={service._id}
-          className="group rounded-3xl overflow-hidden bg-card border border-border/50 hover:border-border transition-all duration-500 hover:shadow-xl"
+          id={service._id}
+          className={`group rounded-3xl overflow-hidden bg-card border transition-all duration-500 hover:shadow-xl ${
+            highlightedId === service._id
+              ? 'border-foreground/40 shadow-2xl shadow-foreground/10 ring-2 ring-foreground/20 scale-[1.02]'
+              : 'border-border/50 hover:border-border'
+          }`}
         >
           {/* Image with loader */}
           <div className="relative aspect-[7/5] overflow-hidden">
-            <ImageLoader
+            <img
               src={service.image || "/placeholder.svg"}
               alt={service.title}
-              aspectRatio="aspect-[7/5]"
-              priority={index < 2}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-60 pointer-events-none" />
+            
+            {/* Highlight pulse effect */}
+            {highlightedId === service._id && (
+              <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 via-transparent to-foreground/5 animate-pulse" />
+            )}
           </div>
 
           {/* Content */}
           <div className="p-8">
-            <h2 className="text-xl md:text-2xl font-medium mb-4 group-hover:text-foreground/80 transition-colors">
+            <h2 className={`text-xl md:text-2xl font-medium mb-4 transition-colors ${
+              highlightedId === service._id
+                ? 'text-foreground'
+                : 'group-hover:text-foreground/80'
+            }`}>
               {service.title}
             </h2>
             <p className="text-muted-foreground leading-relaxed">{service.description}</p>

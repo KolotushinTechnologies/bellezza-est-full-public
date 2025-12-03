@@ -1,7 +1,8 @@
-import type { Product, Category } from "./App";
+import type { Product, Category } from "./types";
+// import type { Product, Category } from "./App";
 
-// Use localhost for development
-const API_URL = "http://localhost:8080/api";
+// API URL - uses environment variable or defaults to production
+const API_URL = import.meta.env.VITE_API_URL || "https://api.bellezza-est.ru/api";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -90,7 +91,8 @@ const getFetchOptions = (options: RequestInit = {}): RequestInit => {
 
 // Convert server product to client product
 export const mapServerProductToClient = (product: ServerProduct): Product => {
-  let imageUrl = "http://localhost:8080/vibrant-flower-bouquet.png"; // Default image
+  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || "https://api.bellezza-est.ru";
+  let imageUrl = `${API_BASE}/vibrant-flower-bouquet.png`; // Default image
   
   if (product.images && product.images.length > 0) {
     const imagePath = product.images[0];
@@ -101,11 +103,11 @@ export const mapServerProductToClient = (product: ServerProduct): Product => {
     } 
     // Check if it's a path starting with /uploads
     else if (imagePath.startsWith('/uploads/')) {
-      imageUrl = `http://localhost:8080${imagePath}`;
+      imageUrl = `${API_BASE}${imagePath}`;
     }
     // Check if it's just a filename
     else if (!imagePath.includes('/')) {
-      imageUrl = `http://localhost:8080/uploads/${imagePath}`;
+      imageUrl = `${API_BASE}/uploads/${imagePath}`;
     }
     // Otherwise, use as is
     else {

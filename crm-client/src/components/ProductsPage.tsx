@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Plus, Trash2, X, Upload, AlertTriangle, Edit } from "lucide-react"
-import type { Product, Category } from "../App"
+import { Plus, Trash2, X, AlertTriangle, Edit } from "lucide-react"
+import type { Product, Category } from "../types"
 import ModalPortal from "./ModalPortal"
 import MultipleImageUploader from "./MultipleImageUploader"
 
@@ -317,7 +317,7 @@ export default function ProductsPage({ products, categories, onAddProduct, onDel
                   gap: "0.375rem",
                 }}
               >
-                {product.tags.map((tag, idx) => (
+                {product.tags.map((tag: string, idx: number) => (
                   <span
                     key={idx}
                     style={{

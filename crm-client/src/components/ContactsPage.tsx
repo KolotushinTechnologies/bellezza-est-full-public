@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react"
 import { Phone, Instagram, MapPin, Save, Loader2 } from "lucide-react"
-import { getContact, updateContact, Contact } from "../api"
+import { getContact, updateContact } from "../api"
 import { useToast } from "../../hooks/use-toast"
 import ContactsSkeleton from "./ContactsSkeleton"
 
 export default function ContactsPage() {
   const { toast } = useToast()
-  const [contact, setContact] = useState<Contact | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -24,7 +23,6 @@ export default function ContactsPage() {
       setLoading(true)
       const data = await getContact()
       if (data) {
-        setContact(data)
         setFormData({
           phone: data.phone,
           instagram: data.instagram,
@@ -49,8 +47,7 @@ export default function ContactsPage() {
     try {
       setSaving(true)
       
-      const updatedContact = await updateContact(formData)
-      setContact(updatedContact)
+      await updateContact(formData)
       
       toast({
         title: "Контакты обновлены",

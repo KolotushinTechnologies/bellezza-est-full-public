@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
-import { LayoutDashboard, Zap, LogOut, AlertTriangle, Briefcase, Image, BookOpen, FileText, Users, Calendar, Phone } from "lucide-react"
+import { LayoutDashboard, LogOut, AlertTriangle, Briefcase, Image, BookOpen, FileText, Users, Calendar, Phone } from "lucide-react"
 import ModalPortal from "./ModalPortal"
 
 interface SidebarProps {
@@ -18,9 +18,9 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     { path: "/portfolio", label: "Портфолио", icon: Image },
     { path: "/care", label: "Уход", icon: BookOpen },
     { path: "/blog", label: "Блог", icon: FileText },
+    { path: "/contacts", label: "Контакты", icon: Phone },
     { path: "/clients", label: "Клиенты", icon: Users },
     { path: "/appointments", label: "Записи", icon: Calendar },
-    { path: "/contacts", label: "Контакты", icon: Phone },
   ]
 
   return (
@@ -57,9 +57,10 @@ export default function Sidebar({ onLogout }: SidebarProps) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: "6px",
           }}
         >
-          <Zap size={24} color="white" />
+          <img src="/logo.svg" alt="Bellezza Logo" style={{ width: "100%", height: "100%" }} />
         </div>
         <div>
           <h2
@@ -79,7 +80,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
               opacity: 0.7,
             }}
           >
-            от KolTech Pro 1n
+            от KolTech Pro M1
           </p>
         </div>
       </div>
