@@ -173,7 +173,7 @@ export default function MultipleImageUploader({ onImagesUploaded, initialImages 
               }}
             >
               <img
-                src={image.startsWith('/') ? `https://api.orhideyanhk.ru${image}` : image}
+                src={image.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://api.bellezza-est.ru'}${image}` : image}
                 alt={`Изображение ${index + 1}`}
                 style={{
                   width: '100%',

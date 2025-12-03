@@ -13,6 +13,7 @@
     "seed:care": "ts-node src/utils/seed-care.ts",
     "seed:blog": "ts-node src/utils/seed-blog.ts",
     "seed:all": "npm run seed:services && npm run seed:portfolio && npm run seed:care && npm run seed:blog",
+    "migrate:image-urls": "ts-node src/scripts/migrate-image-urls.ts",
     "proxy": "node cors-proxy.js",
     "simple-server": "node simple-cors-server.js",
     "start-all": "node start-servers.js",
