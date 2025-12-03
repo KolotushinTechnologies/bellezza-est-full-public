@@ -19,7 +19,6 @@ logs/
 .vscode/
 *.swp
 *.swo
-.next/dev
 
 # OS files
 .DS_Store
