@@ -11,13 +11,31 @@ import Portfolio from '../models/portfolio.model';
 import CareArticle from '../models/care-article.model';
 import BlogPost from '../models/blog-post.model';
 
-const OLD_URL = 'http://localhost:8080';
+const OLD_URLS = [
+  'http://localhost:8080',
+  'http://80.78.243.241:8081',
+  'http://80.78.243.241:8080',
+];
 const NEW_URL = 'https://api.bellezza-est.ru';
+
+// Helper function to check if URL contains any old URL
+const containsOldUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  return OLD_URLS.some(oldUrl => url.includes(oldUrl));
+};
 
 // Helper function to replace URLs in a string
 const replaceUrl = (url: string | undefined): string | undefined => {
   if (!url) return url;
-  return url.replace(new RegExp(OLD_URL, 'g'), NEW_URL);
+  
+  let updatedUrl = url;
+  
+  // Replace all old URLs with the new one
+  for (const oldUrl of OLD_URLS) {
+    updatedUrl = updatedUrl.replace(new RegExp(oldUrl, 'g'), NEW_URL);
+  }
+  
+  return updatedUrl;
 };
 
 // Helper function to replace URLs in an array
@@ -60,7 +78,7 @@ async function migrateImageUrls() {
     for (const service of services) {
       let updated = false;
       
-      if (service.image && service.image.includes(OLD_URL)) {
+      if (service.image && containsOldUrl(service.image)) {
         service.image = replaceUrl(service.image) || service.image;
         updated = true;
       }
@@ -82,7 +100,7 @@ async function migrateImageUrls() {
     for (const item of portfolioItems) {
       let updated = false;
       
-      if (item.src && item.src.includes(OLD_URL)) {
+      if (item.src && containsOldUrl(item.src)) {
         item.src = replaceUrl(item.src) || item.src;
         updated = true;
       }
@@ -124,7 +142,7 @@ async function migrateImageUrls() {
       }
       
       // Update image URL
-      if (article.image && article.image.includes(OLD_URL)) {
+      if (article.image && containsOldUrl(article.image)) {
         article.image = replaceUrl(article.image) || article.image;
         updated = true;
       }
@@ -166,7 +184,7 @@ async function migrateImageUrls() {
       }
       
       // Update image URL
-      if (post.image && post.image.includes(OLD_URL)) {
+      if (post.image && containsOldUrl(post.image)) {
         post.image = replaceUrl(post.image) || post.image;
         updated = true;
       }

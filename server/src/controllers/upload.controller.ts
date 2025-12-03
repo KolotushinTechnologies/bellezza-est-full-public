@@ -11,7 +11,8 @@ export const uploadImage = asyncHandler(async (req: Request, res: Response, next
     return next(new ErrorResponse('Please upload a file', 400));
   }
 
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  // Use production URL or fallback to request host
+  const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
   const filePath = `/uploads/${path.basename(req.file.path)}`;
   const fileUrl = `${baseUrl}${filePath}`;
 
@@ -35,7 +36,8 @@ export const uploadMultipleImages = asyncHandler(async (req: Request, res: Respo
     return next(new ErrorResponse('Please upload at least one file', 400));
   }
 
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  // Use production URL or fallback to request host
+  const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
   
   const uploadedFiles = req.files.map((file) => {
     const filePath = `/uploads/${path.basename(file.path)}`;

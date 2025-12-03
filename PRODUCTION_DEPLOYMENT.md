@@ -26,7 +26,10 @@ PORT=8080
 MONGODB_URI=mongodb://localhost:27017/bellezza_estetica
 JWT_SECRET=your-super-secret-jwt-key-here
 UPLOAD_DIR=uploads
+API_BASE_URL=https://api.bellezza-est.ru
 ```
+
+**Важно**: `API_BASE_URL` должен быть установлен на production домен для корректной работы загрузки изображений через HTTPS.
 
 ### CORS настроен для:
 - `https://bellezza-est.ru`
